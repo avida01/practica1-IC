@@ -35,27 +35,32 @@ class Node:
 def heuristic(a, b):
     return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
 
+#Colocar el nodo de comienzo en la lista abierta y calcular la función de coste f(n), que es la suma de g(n) y h(n).
 def a_star(grid, start, goal):
     open_list = []
     heapq.heappush(open_list, Node(start[0], start[1], 0, heuristic(start, goal)))
     visited = set()
     
     while open_list:
+        #Extraer el nodo con el menor valor de f(n) de la lista abierta.
         current = heapq.heappop(open_list)
         
-        if (current.x, current.y) == goal:
+        if (current.x, current.y) == goal: #Si el nodo actual es el nodo objetivo, se ha encontrado el camino.
             path = []
             while current:
                 path.append((current.x, current.y))
                 current = current.parent
             return path[::-1]
-        
+        #Colocar el nodo actual en la lista cerrada.
         visited.add((current.x, current.y))
         
+        #Determinar los nodos sucesores de n y calcular la función de coste f(n) para cada uno de ellos que no estén en la lista cerrada.
         for dx, dy in MOVES:
             nx, ny = current.x + dx, current.y + dy
+            #Los obstaculos se incluyen directamente en la lista cerrada y se representan con el valor 1.
             if 0 <= nx < GRID_SIZE[0] and 0 <= ny < GRID_SIZE[1] and grid[nx][ny] == 0 and (nx, ny) not in visited:
                 cost = current.g + (1.41 if dx != 0 and dy != 0 else 1)
+                #Asociar con cada sucesor que NO está ni en ABIERTA ni en CERRADA el coste calculado, f(n), y poner esos sucesores en la lista ABIERTA.
                 heapq.heappush(open_list, Node(nx, ny, cost, heuristic((nx, ny), goal), current))
     
     return []
@@ -76,8 +81,12 @@ def draw_grid(screen, grid, path, waypoints):
 def main():
     pygame.init()
     screen = pygame.display.set_mode(SCREEN_SIZE)
-    pygame.display.set_caption("A* Pathfinding with Waypoints")
+    pygame.display.set_caption("A* Pathfinding with Vehicle")
     clock = pygame.time.Clock()
+
+    # Cargar la imagen del vehículo
+    car_image = pygame.image.load("car.png")
+    car_image = pygame.transform.scale(car_image, (CELL_SIZE - 10, CELL_SIZE - 10))  # Ajuste de tamaño
 
     def reset():
         return [
@@ -123,7 +132,11 @@ def main():
             vehicle_pos = full_path[step]
             step += 1
         
-        pygame.draw.rect(screen, RED, (vehicle_pos[1] * CELL_SIZE, vehicle_pos[0] * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+        # Dibujar el vehículo como imagen
+        car_rect = car_image.get_rect()
+        car_rect.topleft = (vehicle_pos[1] * CELL_SIZE + 5, vehicle_pos[0] * CELL_SIZE + 5)
+        screen.blit(car_image, car_rect)
+        
         pygame.display.flip()
         clock.tick(5)
         
